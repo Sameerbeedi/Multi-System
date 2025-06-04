@@ -1,0 +1,31 @@
+{
+  "name": "Email Agent",
+  "description": "Parses an email input and extracts key metadata",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "Input",
+      "name": "Email Text",
+      "output": "email_text"
+    },
+    {
+      "id": "2",
+      "type": "Prompt",
+      "name": "Extract Metadata",
+      "template": "Extract sender, subject, date, and body from this email:\n\n{{ email_text }}",
+      "inputs": {
+        "email_text": "1"
+      }
+    },
+    {
+      "id": "3",
+      "type": "LLM",
+      "name": "OpenAI",
+      "provider": "openai",
+      "inputs": {
+        "prompt": "2"
+      }
+    }
+  ],
+  "outputs": ["3"]
+}

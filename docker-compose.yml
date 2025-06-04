@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  langflow:
+    image: logspace/langflow:latest
+    ports:
+      - "7860:7860"
+    environment:
+      - LANGFLOW_DEFAULT_FLOWS_PATH=/app/flows
+      # Added more environment variables for stability
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./flows:/app/flows
+    depends_on:
+      - redis
+    restart: unless-stopped  # Added restart policy
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped  # Added restart policy
+
+volumes:
+  redis_data:  # Persist Redis data

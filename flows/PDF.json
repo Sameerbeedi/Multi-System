@@ -1,0 +1,31 @@
+{
+  "name": "PDF Agent",
+  "description": "Extracts and summarizes PDF content",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "FileInput",
+      "name": "PDF File",
+      "output": "pdf_content"
+    },
+    {
+      "id": "2",
+      "type": "Prompt",
+      "name": "Summarize PDF",
+      "template": "Summarize this document:\n\n{{ pdf_content }}",
+      "inputs": {
+        "pdf_content": "1"
+      }
+    },
+    {
+      "id": "3",
+      "type": "LLM",
+      "name": "OpenAI",
+      "provider": "openai",
+      "inputs": {
+        "prompt": "2"
+      }
+    }
+  ],
+  "outputs": ["3"]
+}

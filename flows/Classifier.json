@@ -1,0 +1,31 @@
+{
+  "name": "Classifier Agent",
+  "description": "Classifies a user input into predefined categories",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "Input",
+      "name": "User Input",
+      "output": "input_text"
+    },
+    {
+      "id": "2",
+      "type": "Prompt",
+      "name": "Classify Input",
+      "template": "Classify the following input into one of these categories: [Complaint, Inquiry, Feedback, Spam].\n\nInput: {{ input_text }}",
+      "inputs": {
+        "input_text": "1"
+      }
+    },
+    {
+      "id": "3",
+      "type": "LLM",
+      "name": "OpenAI",
+      "provider": "openai",
+      "inputs": {
+        "prompt": "2"
+      }
+    }
+  ],
+  "outputs": ["3"]
+}

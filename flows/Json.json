@@ -1,0 +1,31 @@
+{
+  "name": "JSON Agent",
+  "description": "Extracts values from a JSON blob",
+  "nodes": [
+    {
+      "id": "1",
+      "type": "Input",
+      "name": "JSON Input",
+      "output": "json_data"
+    },
+    {
+      "id": "2",
+      "type": "Prompt",
+      "name": "Process JSON",
+      "template": "Here is a JSON:\n\n{{ json_data }}\n\nExtract the following keys: name, age, location.",
+      "inputs": {
+        "json_data": "1"
+      }
+    },
+    {
+      "id": "3",
+      "type": "LLM",
+      "name": "OpenAI",
+      "provider": "openai",
+      "inputs": {
+        "prompt": "2"
+      }
+    }
+  ],
+  "outputs": ["3"]
+}
