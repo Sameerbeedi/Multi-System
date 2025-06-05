@@ -1,76 +1,67 @@
 import { NextResponse } from 'next/server'
 
-// Helper to check if response is HTML
-function isHtmlResponse(text: string): boolean {
-  return text.trim().toLowerCase().startsWith('<!doctype') || text.trim().toLowerCase().startsWith('<html')
-}
-
 interface LoginResponse {
   access_token: string
   token_type: string
 }
 
-// Get auth token using login endpoint
 async function getAuthToken(baseUrl: string): Promise<string | null> {
   try {
-    const url = `${baseUrl}/api/v1/login`
-    console.log('Attempting authentication:', { url })
+    // First try using API key
+    const apiKey = process.env.LANGFLOW_API_KEY?.trim()
+    if (apiKey) {
+      // Validate API key
+      const validateResponse = await fetch(`${baseUrl}/api/v1/validate`, {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Accept': 'application/json'
+        }
+      })
+      if (validateResponse.ok) {
+        return apiKey
+      }
+    }
 
-    const response = await fetch(url, {
+    // Fallback to username/password auth
+    const loginResponse = await fetch(`${baseUrl}/api/v1/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        username: 'admin', // Default username
-        password: 'admin'  // Default password
+        username: process.env.LANGFLOW_USERNAME || 'admin',
+        password: process.env.LANGFLOW_PASSWORD || 'admin'
       })
     })
-    
-    const contentType = response.headers.get('content-type')
-    console.log('Auth response:', {
-      status: response.status,
-      ok: response.ok,
-      contentType
-    })
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Auth failed:', {
-        status: response.status,
-        text: errorText.substring(0, 200)
+    if (!loginResponse.ok) {
+      const errorText = await loginResponse.text()
+      console.error('Login failed:', {
+        status: loginResponse.status,
+        error: errorText
       })
       return null
     }
 
-    if (!contentType?.includes('application/json')) {
-      console.error('Invalid content type:', contentType)
-      return null
-    }
-
-    const data = await response.json() as LoginResponse
-    if (!data.access_token) {
-      console.error('No access token in response:', data)
-      return null
-    }
-
+    const data = await loginResponse.json() as LoginResponse
     return data.access_token
   } catch (error) {
-    console.error('Auth error:', error instanceof Error ? error.message : String(error))
+    console.error('Auth error:', error)
     return null
   }
 }
 
 export async function GET() {
-  try {
-    const baseUrl = process.env.LANGFLOW_BASE_URL?.trim()
-    if (!baseUrl) {
-      return NextResponse.json(
-        { error: 'LANGFLOW_BASE_URL not configured' },
-        { status: 500 }
-      )
-    }
+  const baseUrl = process.env.LANGFLOW_BASE_URL?.trim()
+  
+  if (!baseUrl) {
+    return NextResponse.json(
+      { error: 'LANGFLOW_BASE_URL not configured' },
+      { status: 500 }
+    )
+  }
 
+  try {
     const token = await getAuthToken(baseUrl)
     if (!token) {
       return NextResponse.json(
@@ -79,27 +70,29 @@ export async function GET() {
       )
     }
 
-    const response = await fetch(`${baseUrl}/api/v1/flows/runs`, {
+    const runsResponse = await fetch(`${baseUrl}/api/v1/flows/runs`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/json'
       }
     })
 
-    if (!response.ok) {
-      const error = await response.text()
+    if (!runsResponse.ok) {
+      const error = await runsResponse.text()
+      console.error('Failed to fetch runs:', {
+        status: runsResponse.status,
+        error
+      })
       return NextResponse.json(
         { error: `Failed to fetch runs: ${error}` },
-        { status: response.status }
+        { status: runsResponse.status }
       )
     }
 
-    const data = await response.json()
-    if (!data?.runs) {
-      return NextResponse.json([])
-    }
-
-    const lastRuns = data.runs.slice(0, 50).map((run: any) => ({
+    const data = await runsResponse.json()
+    const runs = data?.runs || []
+    
+    const lastRuns = runs.slice(0, 50).map((run: any) => ({
       id: run.id,
       flowId: run.flow_id,
       flowName: run.flow_name || 'Untitled Flow',
