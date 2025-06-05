@@ -200,7 +200,7 @@ volumes:
 Create a `Dockerfile` in your project root:
 
 ```dockerfile
-// filepath: d:\Users\sameer\Downloads\flowbit-workflow-orchestration\Dockerfile
+
 FROM node:18-alpine
 
 WORKDIR /app
