@@ -30,7 +30,7 @@ LANGFLOW_API_KEY=your_api_key_here
 LANGFLOW_USERNAME=admin
 LANGFLOW_PASSWORD=admin
 
-# N8N Configuration (optional)
+# N8N Configuration 
 N8N_BASE_URL=http://localhost:5678
 N8N_API_KEY=your_n8n_api_key_here
 ```
